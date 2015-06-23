@@ -2,6 +2,11 @@
 
 ## A lightweight and easy-to-use Java library to handle SOAP on a purely XML level.
 
+### What I've changed from the original soap-ws
+When we hava complex types and we use the SoapMultiValuesProvider interface for providing data, for this complex type we must return null so that the API will drill-down to the components of this complex field.
+In the previous version, there was no way of doing this, because we would have a NullPointer
+
+
 ### Intro
 Welcome to soap-ws! This is a lightweight and easy-to-use Java library that wraps Spring-WS and enables handling SOAP on a purely XML level. soap-ws is based on four main abstractions:
 
