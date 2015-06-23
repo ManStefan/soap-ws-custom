@@ -1,0 +1,11 @@
+<soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:stoc="http://reficio.org/stockquote.wsdl" xmlns:stoc1="http://reficio.org/stockquote.xsd">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <stoc:GetLastTradePriceResponse soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+         <stoc1:TradePrice>
+            <price xsi:type="xsd:float">?</price>
+         </stoc1:TradePrice>
+      </stoc:GetLastTradePriceResponse>
+   </soapenv:Body>
+</soapenv:Envelope>

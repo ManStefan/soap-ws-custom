@@ -1,0 +1,10 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:stoc="http://reficio.org/stockquote.wsdl" xmlns:stoc1="http://reficio.org/stockquote.xsd">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <stoc:GetLastTradePriceResponse>
+         <stoc1:TradePrice>
+            <price>?</price>
+         </stoc1:TradePrice>
+      </stoc:GetLastTradePriceResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
