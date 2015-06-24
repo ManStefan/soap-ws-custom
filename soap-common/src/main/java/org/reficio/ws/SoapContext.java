@@ -51,6 +51,25 @@ public class SoapContext {
     private final Set<QName> excludedTypes;
     private final SoapMultiValuesProvider multiValuesProvider;
 
+    public SoapHeaderProvider getSoapHeaderProvider() {
+        return soapHeaderProvider;
+    }
+
+    private final SoapHeaderProvider soapHeaderProvider;
+
+    public SoapContext(boolean exampleContent, boolean typeComments, boolean valueComments,
+                       boolean buildOptional, boolean alwaysBuildHeaders,
+                       Set<QName> excludedTypes, SoapMultiValuesProvider multiValuesProvider, SoapHeaderProvider soapHeaderProvider) {
+        this.exampleContent = exampleContent;
+        this.typeComments = typeComments;
+        this.valueComments = valueComments;
+        this.buildOptional = buildOptional;
+        this.alwaysBuildHeaders = alwaysBuildHeaders;
+        this.excludedTypes = new HashSet<QName>(excludedTypes);
+        this.multiValuesProvider = multiValuesProvider;
+        this.soapHeaderProvider = soapHeaderProvider;
+    }
+
     /**
      * Constructor mainly for SpringFramework purposes, in any other case use the fluent builder interface;
      * #see builder() method
@@ -72,6 +91,7 @@ public class SoapContext {
         this.alwaysBuildHeaders = alwaysBuildHeaders;
         this.excludedTypes = new HashSet<QName>(excludedTypes);
         this.multiValuesProvider = multiValuesProvider;
+        this.soapHeaderProvider = null;
     }
 
     /**
@@ -93,6 +113,7 @@ public class SoapContext {
         this.alwaysBuildHeaders = alwaysBuildHeaders;
         this.excludedTypes = new HashSet<QName>();
         this.multiValuesProvider = null;
+        this.soapHeaderProvider = null;
     }
 
     public boolean isBuildOptional() {

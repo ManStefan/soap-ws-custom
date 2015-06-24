@@ -26,10 +26,10 @@ import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
 import org.reficio.ws.SoapBuilderException;
 import org.reficio.ws.SoapContext;
+import org.reficio.ws.SoapHeaderProvider;
 import org.reficio.ws.annotation.ThreadSafe;
 import org.reficio.ws.common.Wsdl11Writer;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 
 import javax.wsdl.*;
 import javax.wsdl.extensions.soap.SOAPBinding;
@@ -42,6 +42,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * This class was extracted from the soapUI code base by centeractive ag in October 2011.
@@ -252,11 +253,16 @@ class SoapMessageBuilder {
         }
 
         if (context.isAlwaysBuildHeaders()) {
-            BindingInput bindingInput = bindingOperation.getBindingInput();
-            if (bindingInput != null) {
-                List<?> extensibilityElements = bindingInput.getExtensibilityElements();
-                List<WsdlUtils.SoapHeader> soapHeaders = WsdlUtils.getSoapHeaders(extensibilityElements);
-                addHeaders(soapHeaders, soapVersion, cursor, xmlGenerator);
+
+            if (context.getSoapHeaderProvider() != null){
+                addHeaders(soapVersion,cursor, context.getSoapHeaderProvider());
+            } else {
+                BindingInput bindingInput = bindingOperation.getBindingInput();
+                if (bindingInput != null) {
+                    List<?> extensibilityElements = bindingInput.getExtensibilityElements();
+                    List<WsdlUtils.SoapHeader> soapHeaders = WsdlUtils.getSoapHeaders(extensibilityElements);
+                    addHeaders(soapHeaders, soapVersion, cursor, xmlGenerator);
+                }
             }
         }
         cursor.dispose();
@@ -378,6 +384,111 @@ class SoapMessageBuilder {
             }
         }
         throw new SoapBuilderException("SOAP binding not recognized");
+    }
+
+    private void addHeaders(SoapVersion soapVersion, XmlCursor cursor, SoapHeaderProvider soapHeaderProvider){
+        cursor.toStartDoc();
+        cursor.toChild(soapVersion.getEnvelopeQName());
+        cursor.toFirstChild();
+
+        cursor.beginElement(soapVersion.getHeaderQName());
+        cursor.toFirstChild();
+
+        addToCursor(soapHeaderProvider.constructHeader(), cursor);
+    }
+
+    private void addToCursor(Node root, XmlCursor cursor){
+        Stack<StackNode> nodes = new Stack<StackNode>();
+
+        nodes.add(new StackNode(root, 0));
+
+        while (!nodes.isEmpty()) {
+            StackNode stackNode = nodes.pop();
+            Node node = stackNode.getNode();
+            int level = stackNode.getLevel();
+
+            if (node instanceof Element) {
+                cursor.beginElement((new QName(node.getNamespaceURI(), node.getLocalName(), node.getPrefix())));
+
+                Element element = (Element) node;
+                for (int j = 0; j < element.getAttributes().getLength(); j++) {
+                    Attr attribute = (Attr) element.getAttributes().item(j);
+
+                    String attrNamespaceUri = attribute.getNamespaceURI();
+                    String attrName = attribute.getLocalName();
+                    String attrValue = attribute.getValue();
+                    if (attrNamespaceUri != null) {
+                        cursor.insertAttributeWithValue(new QName(attrNamespaceUri, attrName), attrValue);
+                    } else {
+                        cursor.insertAttributeWithValue(attrName, attrValue);
+                    }
+
+                }
+
+                if (element.hasChildNodes()) {
+                    for (int i = 0; i < element.getChildNodes().getLength(); i++) {
+                        nodes.add(new StackNode(element.getChildNodes().item(i), level + 1));
+                    }
+                }
+
+                if (!nodes.isEmpty()){
+                    StackNode nextNode = nodes.peek();
+
+                    if (nextNode.getLevel() == level){
+                        goToPrevisousContentToken(cursor);
+                    } else
+                    if (nextNode.getLevel() < level){
+                        for (int k = 0; k < level - nextNode.getLevel(); k++){
+                            goToPrevisousContentToken(cursor);
+                        }
+                    }
+                }
+
+            } else
+            if (node instanceof Text) {
+                cursor.insertChars(((Text) node).getTextContent());
+
+                StackNode nextNode = nodes.peek();
+                if (nextNode.getLevel() < level){
+                    for (int k = 0; k < level - nextNode.getLevel(); k++){
+                        goToPrevisousContentToken(cursor);
+                    }
+                }
+            }
+        }
+    }
+
+    private void goToPrevisousContentToken(XmlCursor cursor){
+        cursor.toPrevToken();
+        while (cursor.currentTokenType() != XmlCursor.TokenType.START){
+            cursor.toPrevToken();
+        }
+    }
+
+    class StackNode{
+        private Node node;
+        private int level;
+
+        public StackNode(Node node, int level) {
+            this.node = node;
+            this.level = level;
+        }
+
+        public Node getNode() {
+            return node;
+        }
+
+        public void setNode(Node node) {
+            this.node = node;
+        }
+
+        public int getLevel() {
+            return level;
+        }
+
+        public void setLevel(int level) {
+            this.level = level;
+        }
     }
 
     // --------------------------------------------------------------------------
