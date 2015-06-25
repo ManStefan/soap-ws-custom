@@ -448,10 +448,12 @@ class SoapMessageBuilder {
             if (node instanceof Text) {
                 cursor.insertChars(((Text) node).getTextContent());
 
-                StackNode nextNode = nodes.peek();
-                if (nextNode.getLevel() < level){
-                    for (int k = 0; k < level - nextNode.getLevel(); k++){
-                        goToPrevisousContentToken(cursor);
+                if (!nodes.isEmpty()) {
+                    StackNode nextNode = nodes.peek();
+                    if (nextNode.getLevel() < level) {
+                        for (int k = 0; k < level - nextNode.getLevel(); k++) {
+                            goToPrevisousContentToken(cursor);
+                        }
                     }
                 }
             }
